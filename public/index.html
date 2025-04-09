@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOX ScriptRunner</title>
+
+    <!-- IMPORT PACKAGES -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.40/jquery.csv.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/jstree.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script> 
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/themes/default/style.min.css" />
+
+    <!-- ACC VIEWER -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css" type="text/css">
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
+      
+    <!-- CUSTOM CSS -->
+    <link href="/style.css" rel="stylesheet" type="text/css">
+    <link href="/assets/blox_favicon.png" rel="icon">
+
+    <script> 
+        $(function () {
+            var includes = $('[data-include]')
+            $.each(includes, function () {
+                var file = '/' + $(this).data('include') + '.html'
+                $(this).load(file)
+            })
+        })
+    </script> 
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="navleft"> 
+            <div class="navitem" onclick="window.location.href='/'">
+                <p><strong>BLOX ScriptRunner</strong></p>
+            </div>
+            <div class="navitem" id="instructions-nav" onclick="displayModal('instructions-modal')">
+                <p>Instructions</p>
+            </div>
+            <div class="navitem" id="recents-nav" onclick="displayModal('recents-modal'); getJobs()">
+                <p>Recent Jobs</p>
+            </div>
+            <div class="navitem" id="link-map-nav" onclick="displayModal('link-map-modal')">
+                <p>Link Mapper</p>
+            </div>
+        </div>
+        <div class="navright">
+            <div class="navitem" id="autodeskSignInButton" onclick="window.location.href='./oauth'">
+                <p>Sign in to Autodesk</p>
+            </div>
+            <div class="navitem" onclick="resetUser()" id="autodeskSignOutButton">
+                <p id="userInfo">Sign Out</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP MAIN PAGE -->
+    <div class="app">
+        <div id="app-container">
+
+            <!-- CONTROL PANEL -->
+            <div id="control-panel" class="app-pane">
+                <!-- TITLE AND BATCH TOGGLE -->
+                <div class="pane-row" id="batch-toggler">
+                    <div class="pane-row-left">
+                        <h3 class="pane-title">Control Panel</h3>
+                    </div>
+                    <div id="toggle-options" class="pane-row-right">
+                        <div class="pane-row-right-slice">
+                            <input class="toggle" type="checkbox" id="include-links" name="links-toggle" value="true" onchange="updateExecuteButton()">
+                            <label class="toggle-label toggle-label-left" for="include-links">Include Links</label>
+                            <input class="toggle" type="checkbox" id="batch-opt" name="batch-toggle" value="true" onchange="updateExecuteButton()">
+                            <label class="toggle-label" for="batch-opt">Batch Process</label>
+                        </div>
+                        <div class="pane-row-right-slice">
+                            <input class="toggle" type="checkbox" id="cloud-load" name="batch-toggle" value="true" onchange="updateExecuteButton()">
+                            <label class="toggle-label toggle-label-left" for="cloud-load">Use Live Models</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUTOMATION PICKER -->
+                <div class="pane-row">
+                    <div class="pane-row-left">
+                        <p>Select Automation</p>
+                    </div>
+                    <div class="pane-row-right">
+                        <select class="dropdown" id="select-automation" onchange="updateExecuteButton()">
+                            <option value="none">--- Select Automation ---</option>
+                            <!-- <option value="BOMGeneratorActivity">BOM Generator</option> -->
+                            <option value="BOMGeneratorActivity2">BOM Generator</option>
+                            <!-- <option value="QuantifyElementsActivity">Quantify Model Elements</option>
+                            <option value="ContentAuditorActivity">Audit Model Content</option>
+                            <option value="AnalyzeDuctSectionsActivity">Analyze Duct Cross-Sections</option>
+                            <option value="InsertPartNumbersActivity">Insert BLOX Part Numbers</option>
+                            <option value="QueryLoadedFamiliesActivity">Query Loaded Families</option> -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MODEL PICKER -->
+                <div class="pane-row">
+                    <div class="pane-row-left">
+                        <p id="model-picker-label">Select Target Model</p>
+                    </div>
+                    <div class="pane-row-right" id="single-model">
+                        <select class="dropdown" id="select-model" onchange="updateExecuteButton()">
+                            <option value="none">--- Select Target Model ---</option>
+                        </select>
+                    </div>
+                    <div class="pane-row-right" id="batch-model">
+                        <button class="panel-button" id="select-model-batch">0 Selected in File Browser</button>
+                    </div>
+                </div>
+
+                <!-- EXECUTE BUTTON -->
+                <div class="pane-row">
+                    <div class="pane-row-left">
+                    </div>
+                    <div class="pane-row-right">
+                        <button class="panel-button waiting" id="execute">Execute Automation</button>
+                    </div>
+                </div>
+
+                <!-- RESULT BUTTON -->
+                <div class="pane-row">
+                    <div class="pane-row-left">
+                        <p id="batch-status"></p>
+                    </div>
+                    <div class="pane-row-right">
+                        <button class="panel-button waiting" id="await">Awaiting Result...</button>
+                        <button class="panel-button clickable" id="complete">Automation Complete</button>
+                        <button class="panel-button clickable" id="success">Success — Download Result</button>
+                        <button class="panel-button clickable" id="failure">Failure — Download Report</button>
+                        <button class="panel-button clickable" id="batch-download">Partial Success — Download Results</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILE BROWSER -->          
+            <div id="file-browser" class="app-pane">
+
+                <!-- TITLE AND OPTIONS -->
+                <div class="pane-row" id="batch-toggler">
+                    <div class="pane-row-left">
+                        <h3 class="pane-title">File Browser</h3>
+                    </div>
+                    <div class="pane-row-right">
+                        <input class="tree-control" type="search" id="browser-search" value="">
+                        <p class="text-button tree-control prevent-select" id="search-label" onclick="treeSearch()">Search</p>
+                        <p class="text-button tree-control prevent-select" onclick="expandTree(1)">[+]</p>
+                        <p class="text-button tree-control prevent-select" onclick="collapseTree(1)">[–]</p>
+                        <p class="text-button prevent-select" id="build-tree-button" onclick="loadTree()">Load</p>
+                    </div>
+                </div>
+
+                <!-- JS TREE -->
+                <div id="jstree-shell">
+                    <div id="jstree-container"></div>
+                </div>
+            </div>
+           
+            <!-- FILE VIEWER -->
+            <div id="file-viewer">
+                <div id="viewer-overlay">
+                    <input type="search" id="search-input" value="">
+                    <button id="search" class="viewer-button">Search</button>
+                    <button id="search-id" class="viewer-button">ID Lookup</button>
+                    <button id="search-clear" class="viewer-button">Clear</button>
+                </div>
+                <div id="viewer">
+                    <p id="init-text">Select a file in the browser to view.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTRUCTIONS MODAL -->
+    <div class="modal" id="instructions-modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideModal('instructions-modal')">&times;</span>
+            <h2>How to Use This App</h2>
+            <div class="modal-body">
+                <h3><a href="https://docs.google.com/document/d/10M-V7uddFOcaG1_20s9Yb5lvA8SLY5-vLER7DYZqq2c/edit?usp=sharing" target="_blank" rel="noreferrer">ScriptRunner User Guide</a></h3>
+                <h3><a href="https://app.smartsheet.com/b/form/35bfe0710df6493495084b5449b5c94a" target="_blank" rel="noreferrer">Change Request Form</a></h3>
+                <h3><a href="https://app.smartsheet.com/workspaces/2J3MVVVGjPmR5x8cH4j5rH8RMmmMVRm2qWwcx861" target="_blank" rel="noreferrer">Smartsheet Workspace</a></h3>
+                <h3><a href="https://github.com/AlphaDMC/DA4R-webapp" target="_blank" rel="noreferrer">Developer Documentation</a></h3>
+                <p>If you have questions about this app, contact the developer, Blake Hageman, at <a href="mailto:bhageman@gastudio.com">bhageman@gastudio.com</a>.</p>
+            </div>
+            <br>
+            <h2>Automations in This App</h2>
+            <div class="modal-body">
+                <h3>BOM Generator</h3>
+                <p>Counts all instances of model elements in a Revit model, formatted for consumption as a Bill of Materials (BOM). Matches parts to Revit instances using a <a href="https://app.smartsheet.com/sheets/CrpMWXR9HWjHvJpRJ92Hq88Q9HcfV3RmpHWjx9H1?view=grid" target="_blank" rel="noreferrer">master lookup table</a>.</p>
+                <p class="io"><strong>Input:</strong> Revit model(s) as .rvt</p>
+                <p class="io"><strong>Output:</strong> CSV file(s) as .zip</p>
+            </div>
+        </div>
+    </div>  
+
+    <!-- RECENT JOBS MODAL -->
+    <div class="modal" id="recents-modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideModal('recents-modal')">&times;</span>
+            <h2>Recent Jobs</h2>
+            <div class="modal-body">
+                <table id="recent-jobs-table">
+                    <tr class="header">
+                        <th>Automation</th>
+                        <th>Target Model</th>
+                        <th>Time Submitted</th>
+                        <th>Time Returned</th>
+                        <th>Status</th>
+                        <th>Download <button id="url-refresh" class="clickable" onclick="refreshDownloadUrls()">⟳</button></th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div> 
+
+    <!-- LINK MAPPER MODAL -->
+    <div class="modal" id="link-map-modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideModal('link-map-modal')">&times;</span>
+            <h2>Link Mapper</h2>
+            <div class="modal-body">
+                <div id="link-map-summary">
+                    <p>This panel is used to visualize the tree of external links for a Revit model. A link map CSV file is required; this file is an output of the BOM Generator automation.</p>
+                </div>
+                <div class="dropzone">
+                    <input type="file" class="file-input" id="link-map-csv" accept=".csv"/>
+                    <label for="link-map-csv">Upload Link Map CSV</label>
+                    <p id="drag-and-drop">or drag and drop a file</p>
+                </div>
+                <div class="link-map-header">
+                </div>
+                <div class="link-map-body tf-tree tf-custom">
+
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <!-- ERROR MODAL -->
+    <div class="modal" id="error-modal">
+        <div class="modal-content">
+            <span id="modalclose1" class="close" onclick="hideModal('error-modal')">&times;</span>
+            <h2 id="error-msg">Error</h2>
+            <p>An unexpected error has occured while completing your requested action. Please contact Blake Hageman for assistance.</p>
+        </div>
+    </div>
+
+    <script src="/main.js"></script>
+</body>
+
+</html>
