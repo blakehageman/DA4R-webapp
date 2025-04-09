@@ -59,4 +59,4 @@ To view the status of a WorkItem, use the [GET workitems/{id} endpoint](https://
 
 ## Code Sold Separately
 
-Automations run by this app are stored in a separate **DA4R-addins** repository: https://github.com/AlphaDMC/DA4R-addins. These apps form the AppBundle code used in Design Automations.
+Automations run by this app are stored in a separate **DA4R-automations** repository: https://github.com/blakehageman/DA4R-webapp. These apps form the AppBundle code used in Design Automations.
