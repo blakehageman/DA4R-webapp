@@ -23,23 +23,21 @@ Design Automation AppBundles, Activities, and WorkItems are configured with the 
 
 This app is currently running on Google Cloud servers, accessible at https://scriptrunner.wevrdmc.com/. The Google Cloud CLI is used to push new images to the live server with the command `gcloud run deploy --source .` when in the project directory.
 
-Contact Blake Hageman (bhageman@gastudio.com) and Kapil Chandra (kchandra@bloxbuilt.com) for more information.
-
 ## Data Storage
 
-Smartsheet is used for persistent storage of [automation jobs](https://app.smartsheet.com/sheets/3xVGjvWJ6jHP4CWJrG8R9crgqmxHFhmc29HP6WJ1) and the [Revit:WEVR lookup table](https://app.smartsheet.com/sheets/CrpMWXR9HWjHvJpRJ92Hq88Q9HcfV3RmpHWjx9H1?view=grid&filterId=1747181111299972). The Smartsheet workspace also houses outputs from previously run automations. All Smartsheet API calls are made with the API token from the **Information Technology** account (tech@bloxbuilt.com).
+Smartsheet is used for persistent storage of [automation jobs](https://app.smartsheet.com/sheets/3xVGjvWJ6jHP4CWJrG8R9crgqmxHFhmc29HP6WJ1) and the [Revit:WEVR lookup table](https://app.smartsheet.com/sheets/CrpMWXR9HWjHvJpRJ92Hq88Q9HcfV3RmpHWjx9H1?view=grid&filterId=1747181111299972). The Smartsheet workspace also houses outputs from previously run automations.
 
 ## Usage Monitoring
 
 ### Autodesk Token Consumption
 
-Autodesk's Data Management API is [a premium APS API](https://aps.autodesk.com/pricing-flex-tokens#:~:text=Info-,Design%20Automation%20API,-2.0) that uses prepaid tokens at a rate of 2 tokens/hour. Token consumption for this app can be viewed at https://aps.autodesk.com/myaccount/. Contact Nate Renfro (nrenfro@gastudio.com) for questions regarding APS tokens.
+Autodesk's Data Management API is [a premium APS API](https://aps.autodesk.com/pricing-flex-tokens#:~:text=Info-,Design%20Automation%20API,-2.0) that uses prepaid tokens at a rate of 2 tokens/hour. Token consumption for this app can be viewed at https://aps.autodesk.com/myaccount/.
 
 The app is owned and managed by Blake Hageman. Contact Blake to be added to this app as a collaborator.
 
 ### Google Cloud Server Logs
 
-To monitor the live application server and view console output, go to the [Google Cloud Console](https://console.cloud.google.com/run/detail/us-central1/da4r-webapp/logs?authuser=4&project=wevr-dev). Contact Kapil Chandra (kchandra@bloxbuilt.com) for access.
+To monitor the live application server and view console output, go to the [Google Cloud Console](https://console.cloud.google.com/run/detail/us-central1/da4r-webapp/logs?authuser=4&project=wevr-dev).
 
 ### WorkItem Tracking
 
@@ -59,4 +57,4 @@ To view the status of a WorkItem, use the [GET workitems/{id} endpoint](https://
 
 ## Code Sold Separately
 
-Automations run by this app are stored in a separate **DA4R-automations** repository: https://github.com/blakehageman/DA4R-webapp. These apps form the AppBundle code used in Design Automations.
+Automations run by this app are stored in a separate **DA4R-automations** repository: https://github.com/blakehageman/DA4R-automations. These apps form the AppBundle code used in Design Automations.
